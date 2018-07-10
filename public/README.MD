@@ -1,14 +1,18 @@
-Instalación:
+*Instalación*:
 	Importar pictures.sql en una base de datos mysql.
+
 	Configurar base de datos en la función "getDB" del script public/index.php
+
 	En una consola posicionarse en el directorio "public" y ejecutar el comando:
+	
 		php -S localhost:8888 -t . index.php
+
 	Ejecutará en la sigueinte URL: http://localhost:8888 la API REST.
 
 
 
 
-API REST
+*API REST*
 
 Usuario:
 	debe especificarse el ID de usuario en el header
