@@ -79,11 +79,11 @@ $app->get('/pictures', function ($request, $response, $args) {
 
 		$sth->bindParam(":id_user", $headers["HTTP_X_HTTP_USER_ID"][0], PDO::PARAM_INT);
 		if($data["filters"]["country"]){
-			$sth->bindParam(":country_name", $data["filters"]["country"], PDO::PARAM_INT);
+			$sth->bindParam(":country_name", $data["filters"]["country"], PDO::PARAM_STRING);
 
 		}
 		if($data["filters"]["painter"]){
-			$sth->bindParam(":picture_name", $data["filters"]["painter"], PDO::PARAM_INT);
+			$sth->bindParam(":picture_name", $data["filters"]["painter"], PDO::PARAM_STRING);
 
 		}
 
