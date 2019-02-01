@@ -6,7 +6,7 @@ $app = new Slim\App();
 function getDB(){
 	$dbhost = "localhost";
 	$dbname = "picture";
-	$dbuser = "root";
+	$dbuser = "admin";
 	$dbpass = "secret";
 
 	$mysql_conn_string = "mysql:host=$dbhost;dbname=$dbname";
@@ -76,6 +76,8 @@ $app->get('/pictures', function ($request, $response, $args) {
 			WHERE pic.id_user = :id_user
 			$sqlFilter
 			");
+
+
 
 		$sth->bindParam(":id_user", $headers["HTTP_X_HTTP_USER_ID"][0], PDO::PARAM_INT);
 		if($data["filters"]["country"]){
@@ -200,6 +202,8 @@ $app->put('/pictures/add', function ($request, $response) {
 		$response->write('{"error":"ok"}');
 	} catch(PDOException $e){
 		$response = $response->withStatus(500);
+		$response = $response->withAddedHeader('Allow', 'POST');
+
 		$response->write('{"error":{"message":'.$e->getMessage().'}}');
 	}
     
@@ -229,6 +233,26 @@ $app->delete('/pictures/delete/{id}', function ($request, $response, $args) {
 	}
     
     return $response;
+});
+
+
+$app->options('/{routes:.+}', function ($request, $response, $args) {
+    return $response;
+});
+
+$app->add(function ($req, $res, $next) {
+    $response = $next($req, $res);
+    return $response
+            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X_HTTP_USER_ID')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+});
+
+// Catch-all route to serve a 404 Not Found page if none of the routes match
+// NOTE: make sure this route is defined last
+$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function($req, $res) {
+    $handler = $this->notFoundHandler; // handle using the default Slim page not found handler
+    return $handler($req, $res);
 });
 
 
