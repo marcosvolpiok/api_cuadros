@@ -235,6 +235,94 @@ $app->delete('/pictures/delete/{id}', function ($request, $response, $args) {
     return $response;
 });
 
+$app->get('/countries', function ($request, $response, $args) {
+	try{
+		$headers = $request->getHeaders();
+		$data = $request->getParams();
+
+		$db = getDB();
+		$sth = $db->prepare("SELECT c.id_country,
+			c.name AS name
+			FROM country c
+			");
+
+		$sth->execute();
+		$pictures = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+		if(!$pictures){
+			 $response = $response->withStatus(404);
+			 $response->write('{"error":{"message":"Countries not found"}}');
+			 return $response;
+		}
+
+		$picturesFiltered=filter($data["fields"], $pictures);
+
+		if($picturesFiltered){
+			$response = $response->withJson($picturesFiltered);
+			$db = null;
+		}
+
+	} catch(PDOException $e){
+		$response = $response->withStatus(500);
+		$response->write('{"error":{"message":'.$e->getMessage().'}}');
+	}
+    
+    return $response;
+});
+
+
+$app->get('/painters', function ($request, $response, $args) {
+	try{
+		$headers = $request->getHeaders();
+		$data = $request->getParams();
+
+		$db = getDB();
+		$sth = $db->prepare("SELECT id_painter,
+			name
+			FROM painter
+			");
+
+		$sth->execute();
+		$pictures = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+		if(!$pictures){
+			 $response = $response->withStatus(404);
+			 $response->write('{"error":{"message":"Pinters not found"}}');
+			 return $response;
+		}
+
+		$picturesFiltered=filter($data["fields"], $pictures);
+
+		if($picturesFiltered){
+			$response = $response->withJson($picturesFiltered);
+			$db = null;
+		}
+
+	} catch(PDOException $e){
+		$response = $response->withStatus(500);
+		$response->write('{"error":{"message":'.$e->getMessage().'}}');
+	}
+    
+    return $response;
+});
+
+
+$app->post('/uploadfile', function ($request, $response, $args) {
+	$data = $request->getParams();
+	//print_R($data);
+
+
+    $uploadedFiles = $request->getUploadedFiles();
+    $directory="./upload";
+    $uploadedFile = $uploadedFiles['example1'];
+
+    if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
+        $filename = moveUploadedFile($directory, $uploadedFile);
+        $response->write('uploaded ' . $filename . '<br/>');
+    }    
+});
+
+
 
 $app->options('/{routes:.+}', function ($request, $response, $args) {
     return $response;
@@ -255,5 +343,24 @@ $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function($r
     return $handler($req, $res);
 });
 
+
+/**
+ * Moves the uploaded file to the upload directory and assigns it a unique name
+ * to avoid overwriting an existing uploaded file.
+ *
+ * @param string $directory directory to which the file is moved
+ * @param UploadedFile $uploaded file uploaded file to move
+ * @return string filename of moved file
+ */
+function moveUploadedFile($directory, $uploadedFile)
+{
+    $extension = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
+    $basename = bin2hex(random_bytes(8)); // see http://php.net/manual/en/function.random-bytes.php
+    $filename = sprintf('%s.%0.8s', $basename, $extension);
+
+    $uploadedFile->moveTo($directory . DIRECTORY_SEPARATOR . $filename);
+
+    return $filename;
+}
 
 $app->run();
